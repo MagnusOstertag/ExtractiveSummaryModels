@@ -1,0 +1,19 @@
+# general
+numpy
+pandas
+
+# i/o
+json
+
+# the torch version for this laptop
+-f https://download.pytorch.org/whl/cu116/torch_stable.html torch==1.13.1+cu116
+torchsummary
+
+# MemSum
+tqdm
+rouge_score
+pyrouge
+
+# visualization
+matplotlib
+seaborn

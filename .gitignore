@@ -1,3 +1,9 @@
+# glove for MemSum
+model/glove/
+
+# private files
+literature/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
