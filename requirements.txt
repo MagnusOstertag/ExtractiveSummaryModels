@@ -2,18 +2,21 @@
 numpy
 pandas
 
-# i/o
-json
-
 # the torch version for this laptop
 -f https://download.pytorch.org/whl/cu116/torch_stable.html torch==1.13.1+cu116
 torchsummary
+tensorflow>=2.10.0
+
+# visualization
+matplotlib
+seaborn
 
 # MemSum
 tqdm
 rouge_score
 pyrouge
 
-# visualization
-matplotlib
-seaborn
+# keyBERT
+keybert==0.7.0
+sentence-transformers # for BERT embeddings
+sklearn # for cosine similarity
