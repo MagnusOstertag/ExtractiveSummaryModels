@@ -1,6 +1,11 @@
 # glove for MemSum
 model/glove/
 
+# stanford corenlp for SciBERTSum
+stanford-corenlp-latest.zip
+stanford-corenlp-4.5.0/
+stanford-corenlp-*
+
 # private files
 literature/
 
