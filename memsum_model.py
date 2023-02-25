@@ -5,6 +5,7 @@
 
 import os
 import json
+import glob
 from tqdm import tqdm
 import subprocess
 import numpy as np
@@ -159,18 +160,31 @@ def prepare_data(tokens=False, force=False, val_split=0.2):
 
     return os.path.dirname(dataset_path)
 
-def evaluate_memsum(model_folder_path, memsum_val_corpus_path, p_stop_thres, max_extracted_sentences_per_document):
+def evaluate_memsum(model_folder_path, memsum_val_corpus_path, 
+                    hidden_dim=1024, N_enc_l=3, N_enc_g=3, N_dec=3, 
+                    p_stop_thres=0.7, max_seq_len=100, max_doc_len=500, max_extracted_sentences_per_document=7,
+                    num_heads=8,):
+    """
+    Evaluate the MemSum model on the validation set.
+    The large number of parameters is because I don't want to change the dictionary from the training script."""
     from summarizers import MemSum
     from rouge_score import rouge_scorer
 
+    os.chdir(os.path.join(config.ENV_PATH,'MemSum-015ddda'))
+
     rouge_cal = rouge_scorer.RougeScorer(['rouge1','rouge2', 'rougeLsum'], use_stemmer=True)
 
-    model_path = os.path.join(model_folder_path, "model_batch_250.pt") # ??? TODO: check this
+    # load the model
+    list_model_checkpoints = glob.glob(f"{model_folder_path}/model_batch_*")
+    if len(list_model_checkpoints) == 0:
+        print("No model checkpoint found in the folder. Please check the path.")
+        return np.array([np.nan,np.nan,np.nan])
+    else:
+        model_path = max(glob.glob(f"{model_folder_path}/model_batch_*",)) # get the latest model which is also the best model
 
-    memsum_custom_data = MemSum(model_path, "model/glove/vocabulary_200dim.pkl",)
-                    # gpu = 0 ,  max_doc_len = 500  )
-    # def __init__( self, model_path, vocabulary_path, gpu = None , embed_dim=200, num_heads=8, hidden_dim = 1024, N_enc_l = 2 , N_enc_g = 2, N_dec = 3,  max_seq_len =100, max_doc_len = 500  ):
-    # TODO: understand the parameters here
+    memsum_custom_data = MemSum(model_path, "model/glove/vocabulary_200dim.pkl",
+                                num_heads=num_heads, hidden_dim=hidden_dim,)
+                                # N_enc_l, N_enc_g, N_dec,  max_seq_len, max_doc_len) # I do not need to change these parameters, as I don't vary them
 
     test_corpus_data = [ json.loads(line) for line in open(memsum_val_corpus_path)]
 
@@ -187,7 +201,7 @@ def evaluate_memsum(model_folder_path, memsum_val_corpus_path, p_stop_thres, max
     
     return np.asarray(scores).mean(axis = 0)
 
-def train_memsum(path_to_memsum_training_data, run_uid,
+def train_memsum(run_uid,
                  tokens=False,
                  hidden_dim=1024, N_enc_l=3, N_enc_g=3, N_dec=3, 
                  num_of_epochs=100, validate_every=1000, 
@@ -196,7 +210,9 @@ def train_memsum(path_to_memsum_training_data, run_uid,
                  max_seq_len=100, max_doc_len=500, max_extracted_sentences_per_document=7,
                  num_heads=8, print_every=100, save_every=500, restore_old_checkpoint=True,
                  n_device=8, batch_size_per_device=16):
+    """NOT FUNCTIONING!!!"""
     os.chdir(os.path.join(config.ENV_PATH,'MemSum-015ddda'))
+    print("Started training MemSum")
 
     # paths to data
     memsum_training_corpus_path = os.path.join(config.ENV_PATH, 'MemSum-015ddda/', config.DATA_PATH,
@@ -218,23 +234,40 @@ def train_memsum(path_to_memsum_training_data, run_uid,
         raise(f"Model folder {model_folder_path} or log folder {log_folder_path} already exists. Please choose a different run_uid.")
 
     # run training
-    result = subprocess.run(["cd", str(path_to_memsum_training_data)],
-                            capture_output=True, text=True)
-    print(result.stdout)
-    print(result.stderr)
+    # with open(os.path.join(log_folder_path, "run_log.txt"), "w") as f, \
+    #     subprocess.Popen(["cd", os.path.join(config.ENV_PATH, 'MemSum-015ddda/src/MemSum_Full'), "&&",
+    #                       "dir", "&&",
+    #                       "echo", "Started training MemSum", "&&",
+    #                         "python3", "train.py", "-training_corpus_file_name", memsum_training_corpus_path, "-validation_corpus_file_name", memsum_trainval_labelled_corpus_path,
+    #                         "-model_folder", str(model_folder_path) , "-log_folder", str(log_folder_path),
+    #                         "-vocabulary_file_name", "../../model/glove/vocabulary_200dim.pkl", "-pretrained_unigram_embeddings_file_name", "../../model/glove/unigram_embeddings_200dim.pkl",
+    #                         "-max_seq_len", str(max_seq_len), "-max_doc_len", str(max_doc_len), "-num_of_epochs", str(num_of_epochs), "-save_every", str(save_every),
+    #                         "-n-device", str(n_device), "-batch_size_per_device", str(batch_size_per_device), "-max_extracted_sentences_per_document", str(max_extracted_sentences_per_document),
+    #                         "-moving_average_decay", str(moving_average_decay), "-p_stop_thres", str(p_stop_thres),],
+    #                         shell=True,
+    #                         stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as proc:
+    #         f.write(f"Started training MemSum")
+    #         f.write(f"run_uid: {run_uid}")
+    #         for line in proc.stdout:
+    #             f.write(line)
 
-    result = subprocess.run(["cd", str(path_to_memsum_training_data), "&&",
+    result = subprocess.run(["cd", os.path.join(config.ENV_PATH, 'MemSum-015ddda/src/MemSum_Full'), "&&",
+                             "dir", "&&",
+                             "echo", "Started training MemSum", "&&",
                              "python3", "train.py", "-training_corpus_file_name", memsum_training_corpus_path, "-validation_corpus_file_name", memsum_trainval_labelled_corpus_path,
                              "-model_folder", str(model_folder_path) , "-log_folder", str(log_folder_path),
                              "-vocabulary_file_name", "../../model/glove/vocabulary_200dim.pkl", "-pretrained_unigram_embeddings_file_name", "../../model/glove/unigram_embeddings_200dim.pkl",
                              "-max_seq_len", str(max_seq_len), "-max_doc_len", str(max_doc_len), "-num_of_epochs", str(num_of_epochs), "-save_every", str(save_every),
                              "-n-device", str(n_device), "-batch_size_per_device", str(batch_size_per_device), "-max_extracted_sentences_per_document", str(max_extracted_sentences_per_document),
                              "-moving_average_decay", str(moving_average_decay), "-p_stop_thres", str(p_stop_thres),],
-                             capture_output=True, text=True)
+                             capture_output=True, text=True, shell=True,)
     print(result.stdout)
     print(result.stderr)
     
     # evaluate the model
-    # rough_score = evaluate_memsum(model_folder_path, memsum_val_corpus_path, p_stop_thres, max_extracted_sentences_per_document)
+    rouge_score = evaluate_memsum(model_folder_path, memsum_val_corpus_path,
+                                  hidden_dim, N_enc_l, N_enc_g, N_dec, p_stop_thres, 
+                                  max_seq_len, max_doc_len, max_extracted_sentences_per_document,
+                                  num_heads,)
     
-    return model_folder_path, 'test' # rough_score
+    return model_folder_path, rouge_score
