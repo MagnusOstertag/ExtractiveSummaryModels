@@ -5,8 +5,11 @@ pandas
 # download
 gdown
 
+# optimization
+sklearn
+
 # nlp
-nltk
+stanza
 
 # the torch version for this laptop
 -f https://download.pytorch.org/whl/cu116/torch_stable.html torch==1.13.1+cu116
