@@ -6,7 +6,8 @@ pandas
 gdown
 
 # optimization
-sklearn
+# sklearn
+scikit-learn
 
 # nlp
 stanza
@@ -22,7 +23,7 @@ seaborn
 
 # MemSum
 tqdm
-rouge_score
+rouge-score
 pyrouge
 
 # keyBERT
