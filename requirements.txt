@@ -30,4 +30,4 @@ pyrouge
 # keyBERT
 keybert==0.7.0
 sentence-transformers # for BERT embeddings
-sklearn # for cosine similarity
+# sklearn # for cosine similarity
