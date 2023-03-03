@@ -167,10 +167,10 @@ def evaluate_memsum(model_folder_path, memsum_val_corpus_path,
     """
     Evaluate the MemSum model on the validation set.
     The large number of parameters is because I don't want to change the dictionary from the training script."""
-    from summarizers import MemSum
-    from rouge_score import rouge_scorer
 
     os.chdir(os.path.join(config.ENV_PATH,'MemSum-015ddda'))
+    from summarizers import MemSum
+    from rouge_score import rouge_scorer
 
     rouge_cal = rouge_scorer.RougeScorer(['rouge1','rouge2', 'rougeLsum'], use_stemmer=True)
 
