@@ -1,4 +1,6 @@
-ENV_PATH = '/home/work/Dokumente/Studium/SimTech_MSc/Erasmus/Lectures/Text_mining/project/ExtractiveSummaryModels/' # to be changed
+import os 
+
+ENV_PATH = os.path.dirname(os.path.realpath(__file__))
 DATA_PATH = 'data/'
 MODEL_PATH = 'model/'
 
